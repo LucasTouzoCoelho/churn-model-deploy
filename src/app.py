@@ -10,7 +10,7 @@ st.title("📊 Previsão de Churn de Clientes")
 # 1. Carregar artefatos do treino
 @st.cache_data
 def load_artifacts():
-    artifacts = joblib.load("models/model.pkl")
+    artifacts = joblib.load("src/models/model.pkl")
     return artifacts["model"], artifacts["scaler"], list(artifacts["features"])
 
 model, scaler, features = load_artifacts()
