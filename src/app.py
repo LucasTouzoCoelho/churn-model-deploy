@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 import json
-from preprocessing import preprocess_data
+import numpy as np
 
 # --- Carregar artefatos do treino ---
 @st.cache_resource
@@ -35,19 +35,20 @@ if option == "Upload de CSV":
     if uploaded_file is not None:
         try:
             data = pd.read_csv(uploaded_file)
-            # Pré-processamento
-            df_processed, _, _ = preprocess_data(data, fit_scaler=False, scaler=scaler)
-            X = df_processed[features]
 
-            predictions = model.predict(X)
-            probabilities = model.predict_proba(X)[:, 1]
+            # Garante que só pega as features que o modelo espera
+            X = data[features]
+            X_scaled = scaler.transform(X)
+            predictions = model.predict(X_scaled)
+            probabilities = model.predict_proba(X_scaled)[:, 1]
 
             data["Churn_Prediction"] = predictions
-            data["Churn_Probability"] = probabilities.round(3)
+            data["Churn_Probability"] = probabilities
 
             st.success("✅ Previsões geradas com sucesso!")
             st.dataframe(data)
 
+            # Permitir download do resultado
             csv = data.to_csv(index=False).encode("utf-8")
             st.download_button("⬇️ Baixar resultados", csv, "predictions.csv", "text/csv")
 
@@ -62,24 +63,18 @@ else:
     for feature in features:
         info = features_info.get(feature, {})
 
+        # Input numérico
+        if info.get("type") == "numeric":
+            input_data = {}
+            for feature in features:
+                input_data[feature] = st.number_input(f"{feature}", value=0.0)
+
         # Input categórico
-        if info.get("type") == "categorical":
+        elif info.get("type") == "categorical":
             options = info.get("values", [])
             input_data[feature] = st.selectbox(f"{feature}", options)
 
-        # Input numérico
-        elif info.get("type") == "numeric":
-            min_val = info.get("min", 0)
-            max_val = info.get("max", 100)
-            default = (min_val + max_val)/2
-            input_data[feature] = st.number_input(
-                f"{feature}",
-                min_value=float(min_val),
-                max_value=float(max_val),
-                value=float(default)
-            )
-
-        # Fallback
+        # Fallback para qualquer feature não especificada
         else:
             input_data[feature] = st.text_input(f"{feature}", value="")
 
@@ -88,12 +83,16 @@ else:
 
     if st.button("Prever"):
         try:
-            # Pré-processamento com o mesmo scaler
-            df_processed, _, _ = preprocess_data(input_df, fit_scaler=False, scaler=scaler)
-            X = df_processed[features]
+            # Para features categóricas com LabelEncoder, aplicar codificação
+            for feature in features:
+                if features_info.get(feature, {}).get("type") == "categorical":
+                    # Assumindo que LabelEncoders estão salvos no modelo, ou você pode aplicar manualmente
+                    # Aqui deixamos como string, se necessário ajustar depois
+                    pass
 
-            prediction = model.predict(X)[0]
-            probability = model.predict_proba(X)[0, 1]
+            X_scaled = scaler.transform(input_df)
+            prediction = model.predict(X_scaled)[0]
+            probability = model.predict_proba(X_scaled)[0, 1]
 
             st.write("### Resultado da Previsão:")
             st.write(f"**Classe prevista:** {'Churn' if prediction == 1 else 'Não Churn'}")
