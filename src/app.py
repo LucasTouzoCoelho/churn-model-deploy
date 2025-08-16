@@ -7,7 +7,7 @@ import numpy as np
 # --- Carregar artefatos do treino ---
 @st.cache_resource
 def load_artifacts():
-    artifacts = joblib.load("models/model.pkl")
+    artifacts = joblib.load("src/models/model.pkl")
     return artifacts["model"], artifacts["scaler"], artifacts["features"]
 
 model, scaler, features = load_artifacts()
@@ -65,9 +65,15 @@ else:
 
         # Input numérico
         if info.get("type") == "numeric":
-            input_data = {}
-            for feature in features:
-                input_data[feature] = st.number_input(f"{feature}", value=0.0)
+            min_val = info.get("min", 0)
+            max_val = info.get("max", 100)
+            default = info.get("mean", (min_val + max_val)/2)
+            input_data[feature] = st.number_input(
+                f"{feature}",
+                min_value=min_val,
+                max_value=max_val,
+                value=default
+            )
 
         # Input categórico
         elif info.get("type") == "categorical":
