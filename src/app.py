@@ -65,8 +65,8 @@ else:
 
         # Input numérico
         if info.get("type") == "numeric":
-            min_val = info.get("min", 0)
-            max_val = info.get("max", 100)
+            min_val = info.get("min", 0.0)
+            max_val = info.get("max", 100.0)
             default = info.get("mean", (min_val + max_val)/2)
             input_data[feature] = st.number_input(
                 f"{feature}",
