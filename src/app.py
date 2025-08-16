@@ -1,81 +1,71 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import joblib
-from preprocessing import preprocess_data
-import json
+import numpy as np
 
-st.set_page_config(page_title="Previsão de Churn", layout="wide")
-st.title("📊 Previsão de Churn de Clientes")
-
-# 1️⃣ Carregar artefatos do treino
-@st.cache_data
+@st.cache_resource
 def load_artifacts():
     artifacts = joblib.load("src/models/model.pkl")
-    model = artifacts["model"]
-    features = artifacts["features"]
-    features_info = artifacts.get("features_info", None)
-    return model, features, features_info
+    return artifacts["model"], artifacts["scaler"], artifacts["features"]
 
-model, features, features_info = load_artifacts()
+model, scaler, features = load_artifacts()
 
-# 2️⃣ Seleção do modo de input
-input_mode = st.radio("Como você quer fornecer os dados?", ("Upload CSV", "Inserção Manual"))
+st.title("📊 Churn Prediction App")
 
-if input_mode == "Upload CSV":
-    uploaded_file = st.file_uploader("Escolha um CSV com dados de clientes", type="csv")
+# --- Escolha do modo ---
+option = st.radio(
+    "Como você gostaria de prever?",
+    ("Upload de CSV", "Inserir valores manualmente")
+)
+
+# --- Modo 1: Upload de CSV ---
+if option == "Upload de CSV":
+    uploaded_file = st.file_uploader("Faça upload de um arquivo CSV", type=["csv"])
+
     if uploaded_file is not None:
-        df_new = pd.read_csv(uploaded_file)
-        st.write("Dados carregados:")
-        st.dataframe(df_new.head())
-
         try:
-            df_processed, _, _ = preprocess_data(df_new, fit_scaler=False)
-        except ValueError as e:
-            st.error(f"Erro ao processar os dados: {e}")
-        else:
-            X = df_processed[features]
-            predictions = model.predict(X)
-            probabilities = model.predict_proba(X)[:, 1] if hasattr(model, "predict_proba") else None
+            data = pd.read_csv(uploaded_file)
 
-            st.subheader("Resultados das Previsões")
-            results = pd.DataFrame({
-                "customerID": df_new.get("customerID", range(len(predictions))),
-                "Churn_Prediction": predictions
-            })
-            if probabilities is not None:
-                results["Churn_Probability"] = probabilities.round(3)
+            # Garante que só pega as features que o modelo espera
+            X = data[features]
+            X_scaled = scaler.transform(X)
+            predictions = model.predict(X_scaled)
+            probabilities = model.predict_proba(X_scaled)[:, 1]
 
-            st.dataframe(results)
-            st.download_button(
-                label="⬇️ Baixar previsões",
-                data=results.to_csv(index=False),
-                file_name="churn_predictions_app.csv",
-                mime="text/csv"
-            )
+            data["Churn_Prediction"] = predictions
+            data["Churn_Probability"] = probabilities
 
-elif input_mode == "Inserção Manual":
-    st.subheader("Preencha os dados do cliente para previsão")
-    manual_input = {}
-    if features_info is not None:
-        for feature, info in features_info.items():
-            if info["type"] == "categorical":
-                manual_input[feature] = st.selectbox(feature, info["values"])
-            else:
-                manual_input[feature] = st.number_input(
-                    feature,
-                    min_value=info.get("min", 0.0),
-                    max_value=info.get("max", 100.0),
-                    value=info.get("mean", 0.0)
-                )
+            st.success("✅ Previsões geradas com sucesso!")
+            st.dataframe(data)
 
-        if st.button("Prever Churn"):
-            df_manual = pd.DataFrame([manual_input])
-            df_processed, _, _ = preprocess_data(df_manual, fit_scaler=False)
-            X_manual = df_processed[features]
-            pred = model.predict(X_manual)[0]
-            prob = model.predict_proba(X_manual)[:, 1][0] if hasattr(model, "predict_proba") else None
+            # Permitir download do resultado
+            csv = data.to_csv(index=False).encode("utf-8")
+            st.download_button("⬇️ Baixar resultados", csv, "predictions.csv", "text/csv")
 
-            st.write(f"**Previsão de Churn:** {pred}")
-            if prob is not None:
-                st.write(f"**Probabilidade de Churn:** {prob:.3f}")
+        except Exception as e:
+            st.error(f"Erro ao processar o arquivo: {e}")
+
+# --- Modo 2: Inserção manual ---
+else:
+    st.subheader("🔎 Preencher valores para prever um cliente")
+
+    # Criar inputs dinamicamente para cada feature
+    input_data = {}
+    for feature in features:
+        input_data[feature] = st.number_input(f"{feature}", value=0.0)
+
+    # Converter para DataFrame
+    input_df = pd.DataFrame([input_data])
+
+    if st.button("Prever"):
+        try:
+            X_scaled = scaler.transform(input_df)
+            prediction = model.predict(X_scaled)[0]
+            probability = model.predict_proba(X_scaled)[0, 1]
+
+            st.write("### Resultado da Previsão:")
+            st.write(f"**Classe prevista:** {'Churn' if prediction == 1 else 'Não Churn'}")
+            st.write(f"**Probabilidade de Churn:** {probability:.2%}")
+
+        except Exception as e:
+            st.error(f"Erro ao gerar previsão: {e}")
