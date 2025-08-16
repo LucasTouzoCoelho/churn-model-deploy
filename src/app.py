@@ -1,59 +1,83 @@
+# app.py
 import streamlit as st
+import pandas as pd
 import joblib
-import numpy as np
+from preprocessing import preprocess_data
 import json
-import os
 
-# ---------------------------
-# Função para carregar modelo e scaler
-# ---------------------------
-@st.cache_resource
+st.set_page_config(page_title="Previsão de Churn", layout="wide")
+st.title("📊 Previsão de Churn de Clientes")
+
+# 1️⃣ Carregar artefatos do treino
+@st.cache_data
 def load_artifacts():
-    model = joblib.load("src/models/model.pkl")
-    scaler = joblib.load("src/models/scaler.pkl")
-    with open("src/features_info.json", "r") as f:
-        features_info = json.load(f)
-    return model, scaler, features_info
+    artifacts = joblib.load("src/models/model.pkl")
+    model = artifacts["model"]
+    features = artifacts["features"]
+    features_info = artifacts.get("features_info", None)  # opcional, para limites/valores de cada feature
+    return model, features, features_info
 
-# ---------------------------
-# App Streamlit
-# ---------------------------
-st.title("Churn Prediction App")
+model, features, features_info = load_artifacts()
 
-model, scaler, features_info = load_artifacts()
+# 2️⃣ Upload do CSV
+uploaded_file = st.file_uploader("Escolha um CSV com dados de clientes", type="csv")
+if uploaded_file is not None:
+    df_new = pd.read_csv(uploaded_file)
+    st.write("Dados carregados:")
+    st.dataframe(df_new.head())
 
-st.write("Insira os valores para prever se o cliente terá churn:")
+    # Pré-processar com fit_scaler=False
+    try:
+        df_processed, _, _ = preprocess_data(df_new, fit_scaler=False)
+    except ValueError as e:
+        st.error(f"Erro ao processar os dados: {e}")
+    else:
+        # Garantir apenas features do treino
+        X = df_processed[features]
 
-user_input = {}
+        # Previsões
+        predictions = model.predict(X)
+        probabilities = model.predict_proba(X)[:, 1] if hasattr(model, "predict_proba") else None
 
-# Criar os inputs dinamicamente
-for feature, info in features_info.items():
-    if info["type"] == "numeric":
-        user_input[feature] = st.number_input(
-            f"{feature} (range: {info['min']} - {info['max']})",
-            min_value=info["min"],
-            max_value=info["max"],
-            value=(info["min"] + info["max"]) / 2.0
+        # Exibir resultados
+        st.subheader("Resultados das Previsões")
+        results = pd.DataFrame({
+            "customerID": df_new.get("customerID", range(len(predictions))),
+            "Churn_Prediction": predictions
+        })
+        if probabilities is not None:
+            results["Churn_Probability"] = probabilities.round(3)
+
+        st.dataframe(results)
+        st.download_button(
+            label="⬇️ Baixar previsões",
+            data=results.to_csv(index=False),
+            file_name="churn_predictions_app.csv",
+            mime="text/csv"
         )
-    elif info["type"] == "categorical":
-        user_input[feature] = st.selectbox(
-            f"{feature}",
-            options=info["values"]
-        )
 
-# Botão de previsão
-if st.button("Prever"):
-    # Criar vetor de features na ordem correta
-    features = list(features_info.keys())
-    input_array = np.array([[user_input[feat] for feat in features]])
+# 3️⃣ Previsão manual
+st.subheader("Ou insira os dados manualmente para previsão:")
+manual_input = {}
+if features_info is not None:
+    for feature, info in features_info.items():
+        if info["type"] == "categorical":
+            manual_input[feature] = st.selectbox(feature, info["values"])
+        else:
+            manual_input[feature] = st.number_input(
+                feature,
+                min_value=info.get("min", 0.0),
+                max_value=info.get("max", 100.0),
+                value=info.get("mean", 0.0)
+            )
 
-    # Escalar numéricas
-    input_scaled = scaler.transform(input_array)
+    if st.button("Prever Churn"):
+        df_manual = pd.DataFrame([manual_input])
+        df_processed, _, _ = preprocess_data(df_manual, fit_scaler=False)
+        X_manual = df_processed[features]
+        pred = model.predict(X_manual)[0]
+        prob = model.predict_proba(X_manual)[:, 1][0] if hasattr(model, "predict_proba") else None
 
-    # Fazer previsão
-    prediction = model.predict(input_scaled)[0]
-    prob = model.predict_proba(input_scaled)[0][1]
-
-    st.subheader("Resultado da previsão:")
-    st.write("Churn" if prediction == 1 else "Não Churn")
-    st.write(f"Probabilidade de churn: {prob:.2f}")
+        st.write(f"**Previsão de Churn:** {pred}")
+        if prob is not None:
+            st.write(f"**Probabilidade de Churn:** {prob:.3f}")
