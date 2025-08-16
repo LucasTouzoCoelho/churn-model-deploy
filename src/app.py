@@ -7,7 +7,7 @@ import numpy as np
 # --- Carregar artefatos do treino ---
 @st.cache_resource
 def load_artifacts():
-    artifacts = joblib.load("src/models/model.pkl")
+    artifacts = joblib.load("models/model.pkl")
     return artifacts["model"], artifacts["scaler"], artifacts["features"]
 
 model, scaler, features = load_artifacts()
