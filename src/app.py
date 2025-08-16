@@ -1,71 +1,59 @@
 import streamlit as st
-import pandas as pd
 import joblib
 import numpy as np
+import json
+import os
 
+# ---------------------------
+# Função para carregar modelo e scaler
+# ---------------------------
 @st.cache_resource
 def load_artifacts():
-    artifacts = joblib.load("src/models/model.pkl")
-    return artifacts["model"], artifacts["scaler"], artifacts["features"]
+    model = joblib.load("src/models/model.pkl")
+    scaler = joblib.load("src/models/scaler.pkl")
+    with open("src/features_info.json", "r") as f:
+        features_info = json.load(f)
+    return model, scaler, features_info
 
-model, scaler, features = load_artifacts()
+# ---------------------------
+# App Streamlit
+# ---------------------------
+st.title("Churn Prediction App")
 
-st.title("📊 Churn Prediction App")
+model, scaler, features_info = load_artifacts()
 
-# --- Escolha do modo ---
-option = st.radio(
-    "How would you like to predict?",
-    ("CSV Upload", "Manually insert values")
-)
+st.write("Insira os valores para prever se o cliente terá churn:")
 
-# --- Modo 1: Upload de CSV ---
-if option == "Upload de CSV":
-    uploaded_file = st.file_uploader("Please upload the CSV file", type=["csv"])
+user_input = {}
 
-    if uploaded_file is not None:
-        try:
-            data = pd.read_csv(uploaded_file)
+# Criar os inputs dinamicamente
+for feature, info in features_info.items():
+    if info["type"] == "numeric":
+        user_input[feature] = st.number_input(
+            f"{feature} (range: {info['min']} - {info['max']})",
+            min_value=info["min"],
+            max_value=info["max"],
+            value=(info["min"] + info["max"]) / 2.0
+        )
+    elif info["type"] == "categorical":
+        user_input[feature] = st.selectbox(
+            f"{feature}",
+            options=info["values"]
+        )
 
-            # Garante que só pega as features que o modelo espera
-            X = data[features]
-            X_scaled = scaler.transform(X)
-            predictions = model.predict(X_scaled)
-            probabilities = model.predict_proba(X_scaled)[:, 1]
+# Botão de previsão
+if st.button("Prever"):
+    # Criar vetor de features na ordem correta
+    features = list(features_info.keys())
+    input_array = np.array([[user_input[feat] for feat in features]])
 
-            data["Churn_Prediction"] = predictions
-            data["Churn_Probability"] = probabilities
+    # Escalar numéricas
+    input_scaled = scaler.transform(input_array)
 
-            st.success("✅ Predictions successfully generated!")
-            st.dataframe(data)
+    # Fazer previsão
+    prediction = model.predict(input_scaled)[0]
+    prob = model.predict_proba(input_scaled)[0][1]
 
-            # Permitir download do resultado
-            csv = data.to_csv(index=False).encode("utf-8")
-            st.download_button("⬇️ Download the results", csv, "predictions.csv", "text/csv")
-
-        except Exception as e:
-            st.error(f"Erro ao processar o arquivo: {e}")
-
-# --- Modo 2: Inserção manual ---
-else:
-    st.subheader(" Please fill the values to predict a churn")
-
-    # Criar inputs dinamicamente para cada feature
-    input_data = {}
-    for feature in features:
-        input_data[feature] = st.number_input(f"{feature}", value=0)
-
-    # Converter para DataFrame
-    input_df = pd.DataFrame([input_data])
-
-    if st.button("Prever"):
-        try:
-            X_scaled = scaler.transform(input_df)
-            prediction = model.predict(X_scaled)[0]
-            probability = model.predict_proba(X_scaled)[0, 1]
-
-            st.write("### Prediction Result:")
-            st.write(f"**Predicted Class:** {'Churn' if prediction == 1 else 'No Churn'}")
-            st.write(f"**Probability of  Churn:** {probability:.2%}")
-
-        except Exception as e:
-            st.error(f"Error generating prediction: {e}")
+    st.subheader("Resultado da previsão:")
+    st.write("Churn" if prediction == 1 else "Não Churn")
+    st.write(f"Probabilidade de churn: {prob:.2f}")
