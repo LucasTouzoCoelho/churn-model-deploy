@@ -8,7 +8,7 @@ from model import create_model
 df = pd.read_csv("data/dataset.csv")
 
 # 2. Pré-processar (com fit do scaler)
-features, target, scaler = preprocess_data(df, fit_scaler=True)
+features, target, scaler, le = preprocess_data(df, fit_scaler=True)
 
 # 3. Separar X e y
 x = features
@@ -22,7 +22,8 @@ model.fit(x, y)
 joblib.dump({
     "model": model,
     "scaler": scaler,
-    "features": features
+    "features": features,
+    "le":le
 }, "models/model.pkl")
 
 print("✅ Modelo treinado e salvo em models/model.pkl")

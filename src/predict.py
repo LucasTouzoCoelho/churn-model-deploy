@@ -9,9 +9,10 @@ df_new = pd.read_csv("data/new_data.csv")
 artifacts = joblib.load("models/model.pkl")
 model = artifacts["model"]
 scaler = artifacts["scaler"]  # usar o scaler fitado do treino
+le = artifacts["le"]
 
 # 3. Pré-processar os dados (aplicar transform)
-df_processed, _ , _= preprocess_data(df_new, fit_scaler=False, scaler=scaler)  # fit_scaler=False porque o scaler já está fitado
+df_processed, _ , _= preprocess_data(df_new, fit_scaler=False, scaler=scaler, le=le)  # fit_scaler=False porque o scaler já está fitado
 
 # 4. Prever
 predictions = model.predict(df_processed)

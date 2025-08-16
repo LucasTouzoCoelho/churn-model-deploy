@@ -4,7 +4,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 label_encoders = {}
 
-def preprocess_data(df, fit_scaler=False, scaler=None):
+def preprocess_data(df, fit_scaler=False, scaler=None, le=None):
     df_copy = df.copy()
     
     # Limpeza básica
@@ -44,4 +44,4 @@ def preprocess_data(df, fit_scaler=False, scaler=None):
             raise ValueError("No scaler provided for transform in predict!")
         x_scaled = pd.DataFrame(scaler.transform(df_copy[features]), columns=features)
 
-    return x_scaled, y, scaler
+    return x_scaled, y, scaler, le
