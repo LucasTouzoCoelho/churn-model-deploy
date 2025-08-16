@@ -17,8 +17,8 @@
   },
   "tenure": {
     "type": "numeric",
-    "min": 0,
-    "max": 72
+    "min": 0.0,
+    "max": 72.0
   },
   "PhoneService": {
     "type": "categorical",
@@ -70,12 +70,12 @@
     },
   "MonthlyCharges": {
     "type": "numeric",
-    "min": 18,
-    "max": 119
+    "min": 18.0,
+    "max": 119.0
     },
   "TotalCharges": {
     "type": "numeric",
-    "min": 18,
-    "max": 8694
+    "min": 18.0,
+    "max": 8694.0
     }
 }
