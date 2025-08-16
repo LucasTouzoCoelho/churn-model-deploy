@@ -101,7 +101,7 @@ else:
             probability = model.predict_proba(X_scaled)[0, 1]
 
             st.write("### Resultado da Previsão:")
-            st.write(f"**Classe prevista:** {'Churn' if prediction == 1 else 'Não Churn'}")
+            st.write(f"**Classe prevista:** {prediction}")
             st.write(f"**Probabilidade de Churn:** {probability:.2%}")
 
         except Exception as e:
