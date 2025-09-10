@@ -1,11 +1,11 @@
 {
   "gender": {
     "type": "categorical",
-    "values":["0","1"]
+    "values":["Male","Female"]
   },
   "SeniorCitizen": {
     "type": "categorical",
-    "values":["0","1"]
+    "values":["Yes","No"]
   },
   "Partner": {
     "type": "categorical",
