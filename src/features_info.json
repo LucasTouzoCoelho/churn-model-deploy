@@ -1,19 +1,19 @@
 {
   "gender": {
-    "type": "categorical",
-    "values":["Male","Female"]
+    "type": "numeric",
+    "values":[0,1]
   },
   "SeniorCitizen": {
-    "type": "categorical",
-    "values":["Yes","No"]
+    "type": "numeric",
+    "values":[0,1]
   },
   "Partner": {
-    "type": "categorical",
-    "values":["Yes","No"]
+    "type": "numeric",
+    "values":[0,1]
   },
   "Dependents": {
-    "type": "categorical",
-    "values":["Yes","No"]
+    "type": "numeric",
+    "values":[0,1]
   },
   "tenure": {
     "type": "numeric",
@@ -21,52 +21,52 @@
     "max": 72.0
   },
   "PhoneService": {
-    "type": "categorical",
-    "values":["Yes","No"]
+    "type": "numeric",
+    "values":[0,1]
   },
   "MultipleLines": {
-    "type": "categorical",
-    "values":["Yes","No","No phone service"]
+    "type": "numeric",
+    "values":[0,1,2]
     },
   "InternetService": {
-    "type": "categorical",
-    "values":["DSL","Fiber Optic","No"]
+    "type": "numeric",
+    "values":[0,1,2]
     },
   "OnlineSecurity": {
-    "type": "categorical",
-    "values":["Yes","No","No internet service"]
+    "type": "numeric",
+    "values":[0,1,2]
     },
   "OnlineBackup": {
-    "type": "categorical",
-    "values":["Yes","No","No internet service"]
+    "type": "numeric",
+    "values":[0,1,2]
     },
   "DeviceProtection": {
-    "type": "categorical",
-    "values":["Yes","No","No internet service"]
+    "type": "numeric",
+    "values":[0,1,2]
     },
   "TechSupport": {
-    "type": "categorical",
-    "values":["Yes","No","No internet service"]
+    "type": "numeric",
+    "values":[0,1,2]
     },
   "StreamingTV": {
-    "type": "categorical",
-    "values":["Yes","No","No internet service"]
+    "type": "numeric",
+    "values":[0,1,2]
     },
   "StreamingMovies": {
-    "type": "categorical",
-    "values":["Yes","No","No internet service"]
+    "type": "numeric",
+    "values":[0,1,2]
     },
   "Contract": {
-    "type": "categorical",
-    "values":["Month-to-month","One Year","Two Year"]
+    "type": "numeric",
+    "values":[0,1,2]
     },
   "PaperlessBilling": {
-    "type": "categorical",
-    "values":["Yes","No"]
+    "type": "numeric",
+    "values":[0,1]
     },
   "PaymentMethod": {
-    "type": "categorical",
-    "values": ["Electronic check", "Mailed check", "Bank transfer", "Credit card"]
+    "type": "numeric",
+    "values": [0,1,2,3]
     },
   "MonthlyCharges": {
     "type": "numeric",
