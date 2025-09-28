@@ -1,18 +1,18 @@
 {
   "gender": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1]
   },
   "SeniorCitizen": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1]
   },
   "Partner": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1]
   },
   "Dependents": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1]
   },
   "tenure": {
@@ -21,51 +21,51 @@
     "max": 72.0
   },
   "PhoneService": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1]
   },
   "MultipleLines": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1,2]
     },
   "InternetService": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1,2]
     },
   "OnlineSecurity": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1,2]
     },
   "OnlineBackup": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1,2]
     },
   "DeviceProtection": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1,2]
     },
   "TechSupport": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1,2]
     },
   "StreamingTV": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1,2]
     },
   "StreamingMovies": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1,2]
     },
   "Contract": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1,2]
     },
   "PaperlessBilling": {
-    "type": "numeric",
+    "type": "categorical",
     "values":[0,1]
     },
   "PaymentMethod": {
-    "type": "numeric",
+    "type": "categorical",
     "values": [0,1,2,3]
     },
   "MonthlyCharges": {
