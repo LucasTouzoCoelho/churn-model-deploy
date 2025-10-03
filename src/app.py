@@ -4,7 +4,7 @@ import joblib
 import json
 import numpy as np
 
-# --- Carregar artefatos do treino ---
+# --- Load train artfacts ---
 @st.cache_resource
 def load_artifacts():
     artifacts = joblib.load("src/models/model.pkl")
@@ -12,7 +12,7 @@ def load_artifacts():
 
 model, scaler, features = load_artifacts()
 
-# --- Carregar info das features do JSON ---
+# --- Loading json file ---
 @st.cache_resource
 def load_features_info():
     with open("src/features_info.json") as f:
@@ -22,21 +22,21 @@ features_info = load_features_info()
 
 st.title("📊 Churn Prediction App")
 
-# --- Escolha do modo ---
+# --- Choice mode ---
 option = st.radio(
-    "Como você gostaria de prever?",
-    ("Upload de CSV", "Inserir valores manualmente")
+    "How would you like to predict?",
+    ("CSV Upload", "Manually insert the values")
 )
 
-# --- Modo 1: Upload de CSV ---
-if option == "Upload de CSV":
-    uploaded_file = st.file_uploader("Faça upload de um arquivo CSV", type=["csv"])
+# --- Modo 1: CSV upload ---
+if option == "CSV Upload":
+    uploaded_file = st.file_uploader("Please upload the CSV file", type=["csv"])
 
     if uploaded_file is not None:
         try:
             data = pd.read_csv(uploaded_file)
 
-            # Garante que só pega as features que o modelo espera
+            # Ensure the model is taking only the expected features
             X = data[features]
             X_scaled = scaler.transform(X)
             predictions = model.predict(X_scaled)
@@ -45,19 +45,19 @@ if option == "Upload de CSV":
             data["Churn_Prediction"] = predictions
             data["Churn_Probability"] = probabilities
 
-            st.success("✅ Previsões geradas com sucesso!")
+            st.success("✅ Predictions generated successfully!")
             st.dataframe(data)
 
-            # Permitir download do resultado
+            # Alow the download
             csv = data.to_csv(index=False).encode("utf-8")
-            st.download_button("⬇️ Baixar resultados", csv, "predictions.csv", "text/csv")
+            st.download_button("⬇️ Download results", csv, "predictions.csv", "text/csv")
 
         except Exception as e:
-            st.error(f"Erro ao processar o arquivo: {e}")
+            st.error(f"Error when generating the file: {e}")
 
-# --- Modo 2: Inserção manual ---
+# --- Mode 2: Manually insert ---
 else:
-    st.subheader("🔎 Preencher valores para prever um cliente")
+    st.subheader("🔎 Fill the values to predict churn:")
 
     input_data = {}
     for feature in features:
@@ -87,22 +87,15 @@ else:
     # Converter para DataFrame
     input_df = pd.DataFrame([input_data])
 
-    if st.button("Prever"):
+    if st.button("Predict"):
         try:
-            # Para features categóricas com LabelEncoder, aplicar codificação
-            for feature in features:
-                if features_info.get(feature, {}).get("type") == "categorical":
-                    # Assumindo que LabelEncoders estão salvos no modelo, ou você pode aplicar manualmente
-                    # Aqui deixamos como string, se necessário ajustar depois
-                    pass
-
             X_scaled = scaler.transform(input_df)
             prediction = model.predict(X_scaled)[0]
             probability = model.predict_proba(X_scaled)[0, 1]
 
-            st.write("### Resultado da Previsão:")
-            st.write(f"**Classe prevista:** {'Churn' if prediction == 1 else 'Não Churn'}")
-            st.write(f"**Probabilidade de Churn:** {probability:.2%}")
+            st.write("### Prediction Results:")
+            st.write(f"**Predicted Class:** {'Churn' if prediction == 1 else 'No Churn'}")
+            st.write(f"**Churn probability:** {probability:.2%}")
 
         except Exception as e:
-            st.error(f"Erro ao gerar previsão: {e}")
+            st.error(f"Error when generating the prediction: {e}")
