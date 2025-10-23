@@ -1,30 +1,30 @@
 # train.py
+import os
 import joblib
 import pandas as pd
 from preprocessing import preprocess_data
 from model import create_model
 
 # 1. Ler dados
-df = pd.read_csv("data/dataset.csv")
+df = pd.read_csv("data/train_dataset.csv")
 
-# 2. Pré-processar (com fit do scaler)
-features, target, scaler, le = preprocess_data(df, fit_scaler=True)
+# 2. Pré-processar com fit do scaler e dos encoders
+x, y, scaler, encoders = preprocess_data(df, fit_scaler=True)
 
-# 3. Separar X e y
-x = features
-y = target
-
-# 4. Criar e treinar modelo
+# 3. Criar e treinar modelo
 model = create_model()
 model.fit(x, y)
 
-# 5. Salvar artefatos (modelo + scaler + features)
+# 4. Criar pasta de saída se não existir
+os.makedirs("src/models", exist_ok=True)
+
+# 5. Salvar artefatos com joblib
 joblib.dump({
     "model": model,
     "scaler": scaler,
-    "features": features,
-    "le":le
-}, "models/model.pkl")
+    "features": list(x.columns),
+    "encoders": encoders
+}, "src/models/model.pkl")
 
-print("✅ Modelo treinado e salvo em models/model.pkl")
+print(" Modelo treinado e salvo com joblib em src/models/model.pkl")
 
