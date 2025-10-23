@@ -7,7 +7,7 @@ from preprocessing import preprocess_data
 # --- Load train artifacts ---
 @st.cache_resource
 def load_artifacts():
-    artifacts = joblib.load("models/model.pkl")
+    artifacts = joblib.load("src/models/model.pkl")
     return artifacts["model"], artifacts["scaler"], artifacts["features"], artifacts["encoders"]
 
 model, scaler, features, encoders = load_artifacts()
