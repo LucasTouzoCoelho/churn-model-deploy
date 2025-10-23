@@ -15,7 +15,7 @@ model, scaler, features, encoders = load_artifacts()
 # --- Load JSON file with feature info ---
 @st.cache_resource
 def load_features_info():
-    with open("features_info.json") as f:
+    with open("src/features_info.json") as f:
         return json.load(f)
 
 features_info = load_features_info()
